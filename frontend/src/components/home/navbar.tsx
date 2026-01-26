@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Menu, X } from 'lucide-react'
 import Image from 'next/image'
+import Link from 'next/link'
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -45,7 +46,7 @@ export function Navbar() {
           <div className="w-8 h-8 rounded-lg flex items-center justify-center">
             <Image src="/icon-192.png" alt="AI Manhole Detector Logo" width={32} height={32} className='object-contain' />
           </div>
-          <span className="font-bold text-foreground hidden sm:block">AI Manhole Detector</span>
+          <span className="font-bold text-foreground">AI Manhole Detector</span>
         </motion.div>
 
         {/* Desktop Navigation */}
@@ -72,10 +73,10 @@ export function Navbar() {
           className="hidden md:flex items-center gap-3"
         >
           <Button variant="ghost" className="text-foreground">
-            Sign In
+            <Link href="/login">Sign In</Link>
           </Button>
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-            Sign Up
+            <Link href="/signup">Sign Up</Link>
           </Button>
         </motion.div>
 
@@ -113,10 +114,10 @@ export function Navbar() {
             ))}
             <div className="pt-4 border-t border-border space-y-3">
               <Button variant="ghost" className="w-full text-foreground">
-                Sign In
+                <Link href="/login">Sign In</Link>
               </Button>
               <Button className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                Sign Up
+                <Link href="/signup">Sign Up</Link>
               </Button>
             </div>
           </div>
