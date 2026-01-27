@@ -11,15 +11,38 @@ import AuthLayout from "../AuthLayout";
 import { AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from "next/navigation"
+import { api } from "@/lib/api"
+import { toast } from "react-hot-toast"
 
 export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [username, setUsername] = useState("");
+    const [fullName, setFullName] = useState("");
+    const router = useRouter();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        setIsLoading(false);
+        try {
+            await api.post("/auth/register", {
+                email,
+                username: username || email.split("@")[0],
+                password,
+                full_name: fullName,
+                role: "OPERATOR",
+            });
+            toast.success("Account created successfully! Please sign in.");
+            router.push("/login");
+        } catch (error: any) {
+            console.error("Registration error:", error);
+            const message = error.response?.data?.detail || "Registration failed";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const leftContent = (
@@ -72,96 +95,49 @@ export default function RegisterPage() {
                 <CardContent className="space-y-4">
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div className="space-y-4">
-                            <h3 className="text-sm font-medium text-foreground">Organization Information</h3>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="firstName">First Name *</Label>
-                                    <Input id="firstName" placeholder="John" required />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="lastName">Last Name *</Label>
-                                    <Input id="lastName" placeholder="Doe" required />
-                                </div>
-                            </div>
-
                             <div className="space-y-2">
-                                <Label htmlFor="email">Work Email *</Label>
+                                <Label htmlFor="fullName">Full Name *</Label>
                                 <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="admin@municipality.gov"
+                                    id="fullName"
+                                    placeholder="John Doe"
+                                    value={fullName}
+                                    onChange={(e) => setFullName(e.target.value)}
                                     required
                                 />
                             </div>
-
                             <div className="space-y-2">
-                                <Label htmlFor="organization">Organization Name *</Label>
+                                <Label htmlFor="username">Username (Optional)</Label>
                                 <Input
-                                    id="organization"
-                                    placeholder="City of New York - Dept. of Transportation"
-                                    required
+                                    id="username"
+                                    placeholder="johndoe"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                 />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="role">Your Role *</Label>
-                                    <Select>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select role" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="admin">System Administrator</SelectItem>
-                                            <SelectItem value="manager">Infrastructure Manager</SelectItem>
-                                            <SelectItem value="engineer">City Engineer</SelectItem>
-                                            <SelectItem value="director">Department Director</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="phone">Phone Number *</Label>
-                                    <Input id="phone" type="tel" placeholder="+1 (555) 000-0000" required />
-                                </div>
                             </div>
                         </div>
 
-                        <div className="space-y-4 pt-4 border-t border-border">
-                            <h3 className="text-sm font-medium text-foreground">Deployment Information</h3>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Work Email *</Label>
+                            <Input
+                                id="email"
+                                type="email"
+                                placeholder="admin@municipality.gov"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                required
+                            />
+                        </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="cameras">Number of Cameras</Label>
-                                    <Select>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select range" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="1-10">1-10 cameras</SelectItem>
-                                            <SelectItem value="11-50">11-50 cameras</SelectItem>
-                                            <SelectItem value="51-100">51-100 cameras</SelectItem>
-                                            <SelectItem value="100+">100+ cameras</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <Label htmlFor="timeline">Expected Deployment</Label>
-                                    <Select>
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select timeline" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="immediate">Immediate (1-2 weeks)</SelectItem>
-                                            <SelectItem value="month">Within 1 month</SelectItem>
-                                            <SelectItem value="quarter">Within 3 months</SelectItem>
-                                            <SelectItem value="evaluating">Still evaluating</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="password">Password *</Label>
+                            <Input
+                                id="password"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                required
+                            />
                         </div>
 
                         <div className="flex items-start space-x-2 pt-4">

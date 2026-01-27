@@ -16,6 +16,7 @@ import {
   User,
   ChevronUp,
   Shield,
+  BadgeAlert,
 } from 'lucide-react'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -28,9 +29,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { cn } from '@/lib/utils'
+import { useAuthStore } from "@/store/auth-store"
+import { useRouter } from "next/navigation"
 
 export function Sidebar() {
   const pathname = usePathname()
+  const logout = useAuthStore((state) => state.logout)
+  const user = useAuthStore((state) => state.user)
+  const router = useRouter()
+
+  function handleLogout() {
+    logout()
+    router.push("/login")
+  }
 
   function NavLink({
     href,
@@ -60,7 +71,7 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-border bg-card">
+    <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-border bg-card hidden lg:flex">
       <div className="flex h-16 items-center gap-3 border-b border-border px-6">
         <div className="w-8 h-8 rounded-lg flex items-center justify-center">
           <Image src="/icon-192.png" alt="AI Manhole Detector Logo" width={32} height={32} priority={true} className='object-contain' />
@@ -88,6 +99,9 @@ export function Sidebar() {
         <div className="my-4 border-t border-border" />
 
         <div className="space-y-1">
+          <NavLink href="/dashboard/detections" icon={BadgeAlert}>
+            AI Inspector
+          </NavLink>
           <NavLink href="/dashboard/analytics" icon={TrendingUp}>
             Analytics
           </NavLink>
@@ -113,8 +127,8 @@ export function Sidebar() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm">
-                <span className="font-medium text-foreground">Admin</span>
-                <span className="text-xs text-muted-foreground">admin@city.gov</span>
+                <span className="font-medium text-foreground">{user?.full_name || 'Operator'}</span>
+                <span className="text-xs text-muted-foreground">{user?.email || 'operator@manhole.ai'}</span>
               </div>
               <ChevronUp className="ml-auto h-4 w-4 text-muted-foreground" />
             </Button>
@@ -129,9 +143,9 @@ export function Sidebar() {
               Settings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-destructive">
+            <DropdownMenuItem className="text-destructive" onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
-              Log out
+              Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

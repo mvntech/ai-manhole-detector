@@ -7,6 +7,10 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { useCameras } from "@/hooks/use-cameras"
+import { useAlerts } from "@/hooks/use-alerts"
+import { useDetections } from "@/hooks/use-detections"
+import { useAuthStore } from "@/store/auth-store"
 
 const chartData = [
   { date: 'Jan 1', detections: 45 },
@@ -19,10 +23,18 @@ const chartData = [
 ]
 
 export default function DashboardPage() {
+  const { cameras } = useCameras();
+  const { alerts } = useAlerts();
+  const { detections } = useDetections();
+  const user = useAuthStore((state) => state.user);
+
+  const activeCamerasCount = cameras.filter(c => c.status === "ACTIVE").length;
+  const criticalAlertsCount = alerts.filter(a => a.severity === "CRITICAL" && a.status === "OPEN").length;
+
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-3xl font-bold text-foreground">Welcome back, Admin</h1>
+        <h1 className="text-3xl font-bold text-foreground tracking-tight">Welcome back, {user?.full_name || 'Admin'}</h1>
         <p className="text-muted-foreground mt-1">
           Here's what's happening with your infrastructure today
         </p>
@@ -31,31 +43,31 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatsCard
           title="Active Cameras"
-          value="12"
-          change="+2 from last month"
+          value={activeCamerasCount.toString()}
+          change={`${cameras.length} total nodes`}
           trend="up"
           icon={Camera}
         />
         <StatsCard
           title="Total Detections"
-          value="456"
+          value={detections.length.toString()}
           change="+23 this week"
           trend="up"
           icon={Activity}
         />
         <StatsCard
           title="Critical Alerts"
-          value="3"
-          change="-1 from yesterday"
-          trend="down"
+          value={criticalAlertsCount.toString()}
+          change="Requires immediate action"
+          trend={criticalAlertsCount > 0 ? "up" : "down"}
           icon={AlertCircle}
           variant="destructive"
         />
         <StatsCard
-          title="Avg Response Time"
-          value="12 min"
-          change="-3 min improvement"
-          trend="down"
+          title="System Score"
+          value="98%"
+          change="Operational stability"
+          trend="up"
           icon={Clock}
           variant="success"
         />
@@ -99,30 +111,26 @@ export default function DashboardPage() {
             <CardDescription>Latest critical detections</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <AlertItem
-              severity="critical"
-              camera="Camera #12"
-              location="Main St & 5th Ave"
-              time="2 minutes ago"
-            />
-            <AlertItem
-              severity="high"
-              camera="Camera #8"
-              location="Park Ave"
-              time="15 minutes ago"
-            />
-            <AlertItem
-              severity="medium"
-              camera="Camera #5"
-              location="Broadway"
-              time="1 hour ago"
-            />
+            {alerts.slice(0, 4).map((alert) => (
+              <AlertItem
+                key={alert.id}
+                severity={alert.severity.toLowerCase() as any}
+                camera={`Camera ID: ${alert.camera_id.split('-')[0]}`}
+                location={alert.title}
+                time={new Date(alert.created_at).toLocaleTimeString()}
+              />
+            ))}
+            {alerts.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">No active alerts found.</p>
+            )}
           </CardContent>
-          <CardFooter>
-            <Button variant="ghost" className="w-full justify-center">
-              View All Alerts →
-            </Button>
-          </CardFooter>
+          {alerts.length > 0 && (
+            <CardFooter>
+              <Button variant="ghost" className="w-full justify-center">
+                View All Alerts →
+              </Button>
+            </CardFooter>
+          )}
         </Card>
 
         <Card className="md:col-span-2">
@@ -144,24 +152,18 @@ export default function DashboardPage() {
             <CardDescription>Recent system events</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <ActivityItem
-              title="Detection recorded"
-              description="Camera #12"
-              time="2 min ago"
-              icon={AlertCircle}
-            />
-            <ActivityItem
-              title="Camera offline"
-              description="Camera #8"
-              time="15 min ago"
-              icon={Camera}
-            />
-            <ActivityItem
-              title="System update"
-              description="Completed successfully"
-              time="1 hour ago"
-              icon={Activity}
-            />
+            {detections.slice(0, 5).map((det) => (
+              <ActivityItem
+                key={det.id}
+                title={`Detection: ${det.object_class}`}
+                description={`Confidence: ${(det.confidence * 100).toFixed(1)}%`}
+                time={new Date(det.timestamp).toLocaleTimeString()}
+                icon={Activity}
+              />
+            ))}
+            {detections.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-8">No recent activity.</p>
+            )}
           </CardContent>
         </Card>
       </div>

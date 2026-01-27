@@ -11,15 +11,43 @@ import AuthLayout from "../AuthLayout";
 import { Building, Check, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from "next/navigation"
+import { useAuthStore } from "@/store/auth-store"
+import { api } from "@/lib/api"
+import { toast } from "react-hot-toast"
 
 export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const router = useRouter();
+    const setAuth = useAuthStore((state) => state.setAuth);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        setIsLoading(false);
+        try {
+            const params = new URLSearchParams();
+            params.append("username", email);
+            params.append("password", password);
+
+            const response = await api.post("/auth/login", params);
+            const { access_token } = response.data;
+
+            const userResponse = await api.get("/auth/me", {
+                headers: { Authorization: `Bearer ${access_token}` }
+            });
+
+            setAuth(userResponse.data, access_token);
+            toast.success("Login successful!");
+            router.push("/dashboard");
+        } catch (error: any) {
+            console.error("Login error:", error);
+            const message = error.response?.data?.detail || "Invalid credentials";
+            toast.error(message);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     const leftContent = (
@@ -95,6 +123,8 @@ export default function LoginPage() {
                                 type="email"
                                 placeholder="admin@municipality.gov"
                                 className="border-border"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
                         </div>
@@ -111,6 +141,8 @@ export default function LoginPage() {
                                 type="password"
                                 placeholder="Enter your password"
                                 className="border-border"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
                         </div>

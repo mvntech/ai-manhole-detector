@@ -2,11 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-
-interface AuthLayoutProps {
-    children: React.ReactNode;
-    leftContent: React.ReactNode;
-}
+import type { AuthLayoutProps } from '@/types/user';
 
 export default function AuthLayout({ children, leftContent }: AuthLayoutProps) {
     return (

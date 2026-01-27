@@ -1,3 +1,4 @@
+from typing import List, Optional, Any
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,6 +10,7 @@ from app.services.alert_service import alert_service
 from app.utils.storage import save_upload_file
 from app.ai.yolo_detector import yolo_detector
 from app.ai.gemini_client import gemini_client
+from app.core.socket_manager import socket_manager
 
 router = APIRouter()
 
@@ -26,12 +28,12 @@ async def process_detection_ai(detection_id: str, file_path: str, db: AsyncSessi
     # 1. YOLO detection
     yolo_results = yolo_detector.detect(file_path)
     
-    # 2.if manhole detected, use gemini to verify
+    # 2. if manhole detected, use Gemini to verify
     if yolo_results:
-        # for demo, we take the first manhole detection
+        # take the first detection for now
         best_detection = max(yolo_results, key=lambda x: x["confidence"])
         
-        # update detection in DB with YOLO results
+        # update detection in DB
         detection = await detection_service.get(db, id=detection_id)
         if detection:
             setattr(detection, "confidence", best_detection["confidence"])
@@ -40,11 +42,19 @@ async def process_detection_ai(detection_id: str, file_path: str, db: AsyncSessi
             setattr(detection, "bbox_width", best_detection["bbox"][2])
             setattr(detection, "bbox_height", best_detection["bbox"][3])
             
-            # gemini verification
+            # broadcast initial detection data
+            await socket_manager.broadcast_detection({
+                "id": str(detection.id),
+                "camera_id": str(detection.camera_id),
+                "object_class": detection.object_class,
+                "confidence": detection.confidence,
+                "status": "PROCESSING"
+            })
+
+            # Gemini verification
             gemini_result = await gemini_client.verify_detection(file_path)
             
             if gemini_result.get("verified"):
-                # determine that if it's a hazard or not
                 severity = "MEDIUM"
                 if "HIGH" in gemini_result["analysis"].upper():
                     severity = "HIGH"
@@ -55,18 +65,35 @@ async def process_detection_ai(detection_id: str, file_path: str, db: AsyncSessi
                 setattr(detection, "status", "CONFIRMED")
                 setattr(detection, "metadata_json", {"gemini_analysis": gemini_result["analysis"]})
                 
-                # create alert if hazard
+                # create Alert
                 alert_in = alert_schema.AlertCreate(
                     camera_id=detection.camera_id,
-                    title=f"Manhole Hazard Detected: {severity}",
+                    title=f"Manhole Hazard: {severity}",
                     description=gemini_result["analysis"],
                     severity=severity,
                     status="OPEN"
                 )
                 alert = await alert_service.create(db, obj_in=alert_in)
                 setattr(detection, "alert_id", alert.id)
+
+                # broadcast alert
+                await socket_manager.broadcast_alert({
+                    "id": str(alert.id),
+                    "camera_id": str(alert.camera_id),
+                    "title": alert.title,
+                    "severity": alert.severity,
+                    "status": alert.status
+                })
             
             await db.commit()
+            
+            # final detection update broadcast
+            await socket_manager.broadcast_detection({
+                "id": str(detection.id),
+                "camera_id": str(detection.camera_id),
+                "status": detection.status,
+                "severity": detection.severity
+            })
 
 @router.post("/upload", response_model=detection_schema.Detection)
 async def upload_detection(
