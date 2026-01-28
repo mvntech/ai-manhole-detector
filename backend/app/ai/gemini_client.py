@@ -13,6 +13,7 @@ class GeminiClient:
 
     async def verify_detection(self, image_path: str, object_type: str = "manhole"):
         if not self.model:
+            print("Gemini API key not configured!")
             return {"verified": False, "reason": "Gemini API key not configured"}
         try:
             img = Image.open(image_path)
