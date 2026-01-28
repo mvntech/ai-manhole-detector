@@ -13,7 +13,7 @@ class YOLODetector:
             print(f"Warning: Model path {self.model_path} does not exist. Using yolov8n.pt as fallback.")
             self.model = YOLO("yolov8n.pt")
 
-    def detect(self, image_path: str, conf_threshold: float = 0.5):
+    def detect(self, image_path: str, conf_threshold: float = 0.25):
         if not self.model:
             return []
             
@@ -22,11 +22,15 @@ class YOLODetector:
         
         for result in results:
             for box in result.boxes:
+                confidence = float(box.conf[0])
+                class_id = int(box.cls[0])
+                class_name = result.names[class_id]
+
                 detections.append({
                     "bbox": box.xywh[0].tolist(),
-                    "confidence": float(box.conf[0]),
-                    "class_id": int(box.cls[0]),
-                    "class_name": result.names[int(box.cls[0])]
+                    "confidence": confidence,
+                    "class_id": class_id,
+                    "class_name": class_name
                 })
                 
         return detections

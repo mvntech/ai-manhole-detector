@@ -13,7 +13,7 @@ engine = create_async_engine(
     connect_args={"ssl": True} if "neon.tech" in settings.DATABASE_URL or "sslmode" in settings.DATABASE_URL else {}
 )
 SessionLocal = sessionmaker(
-    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession
+    autocommit=False, autoflush=False, bind=engine, class_=AsyncSession, expire_on_commit=False
 )
 
 Base = declarative_base()

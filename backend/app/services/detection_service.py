@@ -1,12 +1,29 @@
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import load_only
 from app.models.detection import Detection
 from app.schemas.detection import DetectionCreate, DetectionUpdate
 
 class DetectionService:
     async def get(self, db: AsyncSession, id: str) -> Optional[Detection]:
-        result = await db.execute(select(Detection).filter(Detection.id == id))
+        result = await db.execute(
+            select(Detection)
+            .filter(Detection.id == id)
+            .options(load_only(
+                Detection.id,
+                Detection.camera_id,
+                Detection.confidence,
+                Detection.bbox_x,
+                Detection.bbox_y,
+                Detection.bbox_width,
+                Detection.bbox_height,
+                Detection.status,
+                Detection.severity,
+                Detection.metadata_json,
+                Detection.alert_id
+            ))
+        )
         return result.scalars().first()
 
     async def get_multi(

@@ -1,12 +1,16 @@
 import socketio
 from typing import Any
+from app.core.config import settings
 
-sio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')
+sio = socketio.AsyncServer(
+    async_mode='asgi', 
+    cors_allowed_origins=settings.BACKEND_CORS_ORIGINS
+)
 
 socket_app = socketio.ASGIApp(sio)
 
 @sio.event
-async def connect(sid, environ):
+async def connect(sid, environ, auth=None):
     print(f"Client connected: {sid}")
 
 @sio.event

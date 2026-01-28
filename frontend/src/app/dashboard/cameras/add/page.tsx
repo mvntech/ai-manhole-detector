@@ -1,14 +1,19 @@
 'use client'
 
 import React from "react"
-
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { ArrowLeft, Loader2 } from 'lucide-react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useCameras } from "@/hooks/use-cameras"
+import { toast } from "react-hot-toast"
 
 export default function AddCameraPage() {
+  const router = useRouter()
+  const { createCamera, isLoading } = useCameras()
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     location: '',
@@ -27,9 +32,36 @@ export default function AddCameraPage() {
     }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Form submitted:', formData)
+    setIsSubmitting(true)
+
+    try {
+      const cameraData = {
+        name: formData.name,
+        location: formData.location,
+        stream_url: formData.ipAddress,
+        is_active: true,
+        status: "ACTIVE" as any,
+        detection_enabled: formData.enableAlerts,
+      }
+
+      await createCamera(cameraData, {
+        onSuccess: () => {
+          toast.success("Camera added successfully!")
+          router.push("/dashboard/cameras")
+        },
+        onError: (error) => {
+          console.error('Error creating camera:', error)
+          toast.error("Failed to add camera. Please try again.")
+        }
+      })
+    } catch (error) {
+      console.error('Submit error:', error)
+      toast.error("An unexpected error occurred.")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -179,8 +211,13 @@ export default function AddCameraPage() {
               </div>
 
               <div className="flex gap-3 border-t border-border pt-6">
-                <Button type="submit" className="bg-primary hover:bg-primary/90">
-                  Add Camera
+                <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Adding...
+                    </>
+                  ) : "Add Camera"}
                 </Button>
                 <Link href="/dashboard/cameras">
                   <Button variant="outline">Cancel</Button>

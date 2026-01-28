@@ -5,6 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     PROJECT_NAME: str = "AI Manhole Detector"
     API_V1_STR: str = "/api/v1"
+    BACKEND_URL: str = "http://localhost:8000"
     
     # database
     DATABASE_URL: str = "postgresql+asyncpg://user:password@localhost:5432/manhole_db"
@@ -18,7 +19,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     
     # cors
-    BACKEND_CORS_ORIGINS: Any = ["http://localhost:3000", "http://127.0.0.1:3000"]
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
@@ -33,6 +34,17 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: str = ""
     YOLO_MODEL_PATH: str = "models/yolov8_manhole.pt"
     
+    # notifications (SMS - twilio)
+    TWILIO_ACCOUNT_SID: Optional[str] = None
+    TWILIO_AUTH_TOKEN: Optional[str] = None
+    TWILIO_FROM_NUMBER: Optional[str] = None
+    TO_PHONE_NUMBER: Optional[str] = None
+    
+    # notifications (email - sendgrid)
+    SENDGRID_API_KEY: Optional[str] = None
+    FROM_EMAIL: Optional[str] = None
+    TO_EMAIL: Optional[str] = None
+
     model_config = SettingsConfigDict(
         case_sensitive=True, 
         env_file=".env",

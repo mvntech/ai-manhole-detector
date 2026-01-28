@@ -21,4 +21,9 @@ async def save_upload_file(upload_file: UploadFile, folder: str = "") -> str:
     with open(file_path, "wb") as buffer:
         shutil.copyfileobj(upload_file.file, buffer)
         
-    return file_path
+    return f"/uploads/{folder}/{file_name}".replace("//", "/")
+
+def get_file_path_from_url(url: str) -> str:
+    if url.startswith("/"):
+        url = url[1:]
+    return os.path.join(os.getcwd(), url)
