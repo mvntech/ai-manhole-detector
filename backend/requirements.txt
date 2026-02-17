@@ -16,6 +16,7 @@ asyncpg==0.29.0
 alembic==1.13.1
 
 # AI & computer vision (Updated for better compatibility)
+opencv-python-headless
 ultralytics>=8.1.0
 torch==2.5.1+cpu
 torchvision>=0.20.0
