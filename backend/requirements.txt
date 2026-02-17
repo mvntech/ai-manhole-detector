@@ -1,5 +1,4 @@
---index-url https://download.pytorch.org/whl/cpu
---extra-index-url https://pypi.org/simple
+--extra-index-url https://download.pytorch.org/whl/cpu
 
 # fastAPI & web server
 fastapi==0.110.0
@@ -16,12 +15,12 @@ sqlalchemy==2.0.27
 asyncpg==0.29.0
 alembic==1.13.1
 
-# AI & computer vision
-ultralytics==8.1.20
+# AI & computer vision (Updated for better compatibility)
+ultralytics>=8.1.0
 torch==2.5.1+cpu
-torchvision==0.20.1+cpu
-pillow==10.2.0
-google-generativeai==0.8.6
+torchvision>=0.20.0
+pillow>=10.2.0
+google-generativeai>=0.7.0
 
 # authentication & security
 python-jose[cryptography]==3.3.0
@@ -30,8 +29,8 @@ passlib[bcrypt]==1.7.4
 PyJWT==2.8.0
 
 # configuration & utilities
-pydantic==2.6.1
-pydantic-settings==2.1.0
+pydantic>=2.6.1
+pydantic-settings>=2.1.0
 python-dotenv==1.0.1
 aiohttp==3.9.3
 requests==2.31.0
