@@ -1,4 +1,4 @@
---extra-index-url https://download.pytorch.org/whl/cpu
+--index-url https://download.pytorch.org/whl/cpu
 
 # fastAPI & web server
 fastapi==0.110.0
@@ -17,8 +17,8 @@ alembic==1.13.1
 
 # AI & computer vision
 ultralytics==8.1.20
-torch==2.2.0
-torchvision==0.17.0
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
 pillow==10.2.0
 google-generativeai==0.8.6
 
